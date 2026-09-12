@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Film } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -5,19 +8,27 @@ import { cn } from "@/lib/utils";
 /**
  * Превью видео.
  *
- * Заглушка Спринта 1: колонка thumbnail_url в базе уже есть, но заполнять её
- * будет парсер Instagram. Пока картинки нет — рисуем плейсхолдер в пропорции
- * 9:16, чтобы верстка не прыгала, когда превью появятся.
+ * Клиентский компонент ради одного: обработки onError.
+ *
+ * Ссылки на обложки, которые отдаёт Graph API, подписаны и живут ограниченное
+ * время. Через несколько дней после синхронизации они начинают отдавать 403, и
+ * без этой обработки в таблице вместо картинок расползался бы alt-текст.
+ * Настоящее решение — складывать обложки в Supabase Storage, это Спринт 3;
+ * до тех пор просто аккуратно откатываемся на заглушку.
+ *
+ * alt пустой намеренно: рядом всегда стоит название и подпись видео, так что
+ * для скринридера картинка декоративная, а дублирование только мешает.
  */
 export function ReelThumbnail({
   url,
-  alt,
   className,
 }: {
   url?: string | null;
-  alt?: string;
   className?: string;
 }) {
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(url) && !failed;
+
   return (
     <div
       className={cn(
@@ -25,15 +36,17 @@ export function ReelThumbnail({
         className,
       )}
     >
-      {url ? (
-        // Обычный <img>, а не next/image: домены Instagram CDN меняются, и
-        // настраивать remotePatterns имеет смысл, когда появится парсер.
+      {showImage ? (
+        // Обычный <img>, а не next/image: домены Instagram CDN меняются от
+        // аккаунта к аккаунту, и настраивать remotePatterns имеет смысл, когда
+        // обложки начнут храниться у нас.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={url}
-          alt={alt ?? ""}
+          src={url!}
+          alt=""
           className="h-full w-full object-cover"
           loading="lazy"
+          onError={() => setFailed(true)}
         />
       ) : (
         <Film className="size-4" aria-hidden />

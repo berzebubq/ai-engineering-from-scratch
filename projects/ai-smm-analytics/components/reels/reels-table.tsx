@@ -56,7 +56,6 @@ export function ReelsTable({ reels }: { reels: Reel[] }) {
             <TableCell>
               <ReelThumbnail
                 url={reel.thumbnail_url}
-                alt={reel.caption ?? ""}
                 className="h-16 w-9"
               />
             </TableCell>

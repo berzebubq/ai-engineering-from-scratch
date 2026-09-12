@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionDialog } from "@/hooks/use-action-dialog";
-import { createReel } from "@/lib/actions/reels";
+import { createReel } from "@/app/actions/reels";
 import { REEL_TYPE_LABELS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

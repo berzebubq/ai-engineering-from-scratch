@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 
-import { initialActionState, type ActionState } from "@/lib/actions/types";
+import { initialActionState, type ActionState } from "@/app/actions/types";
 
 type ServerAction = (
   prevState: ActionState,

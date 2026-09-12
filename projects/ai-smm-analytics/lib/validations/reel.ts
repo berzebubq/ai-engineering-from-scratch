@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { normalizeReelUrl } from "@/lib/instagram/url";
+
 /**
  * Схемы валидации для видео.
  *
@@ -24,6 +26,9 @@ const reelUrl = z
   .string()
   .trim()
   .min(1, "Укажите ссылку на видео")
+  // Приводим к тому же виду, в котором ссылку сохраняет синхронизация,
+  // иначе одно и то же видео заведётся дважды.
+  .transform(normalizeReelUrl)
   .refine(
     (value) => {
       try {

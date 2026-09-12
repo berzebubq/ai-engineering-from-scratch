@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import type { ActionState } from "@/lib/actions/types";
+import type { ActionState } from "@/app/actions/types";
 import { createClient } from "@/lib/supabase/server";
 import { createReelSchema } from "@/lib/validations/reel";
 

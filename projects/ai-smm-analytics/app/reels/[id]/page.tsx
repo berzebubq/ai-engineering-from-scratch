@@ -22,6 +22,7 @@ import {
   formatNumber,
   reelShortCode,
 } from "@/lib/format";
+import { engagementRate } from "@/lib/analytics";
 import { getReelWithTags } from "@/lib/queries/reels";
 import type { ReelWithTags } from "@/types/database";
 import type { TagCategory } from "@/types/database";
@@ -117,7 +118,6 @@ export default async function ReelPage({ params }: PageProps<"/reels/[id]">) {
       <header className="mt-4 flex flex-wrap items-start gap-5">
         <ReelThumbnail
           url={reel.thumbnail_url}
-          alt={reel.caption ?? ""}
           className="h-40 w-[90px]"
         />
 
@@ -171,8 +171,8 @@ export default async function ReelPage({ params }: PageProps<"/reels/[id]">) {
         <div className="mt-4">
           <StatCard
             label="Engagement rate"
-            value={formatEngagementRate(reel.engagement_rate)}
-            hint="(лайки + сохранения + комментарии + репосты) ÷ охват"
+            value={formatEngagementRate(engagementRate(reel))}
+            hint="(лайки + сохранения) ÷ охват"
           />
         </div>
       </section>

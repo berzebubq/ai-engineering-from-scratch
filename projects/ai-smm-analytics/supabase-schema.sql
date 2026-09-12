@@ -67,10 +67,12 @@ create table if not exists public.reels (
   -- Engagement rate считается базой, а не приложением: одна формула,
   -- по ней можно сортировать и строить индексы.
   -- NULL, когда reach = 0 — это честнее, чем ноль (мы просто не знаем).
+  -- Формула зафиксирована продактом: (лайки + сохранения) / охват.
+  -- Храним долей, а не процентом: проценты — дело отображения.
   engagement_rate numeric generated always as (
     case
       when reach > 0
-      then round((likes + saved + comments + shares)::numeric / reach, 4)
+      then round((likes + saved)::numeric / reach, 4)
     end
   ) stored,
 
@@ -80,11 +82,54 @@ create table if not exists public.reels (
 );
 
 comment on table  public.reels is 'Видео: свои и конкурентов, с метриками из Instagram';
-comment on column public.reels.engagement_rate is 'Вычисляется базой: (likes+saved+comments+shares)/reach. NULL при reach=0';
+comment on column public.reels.engagement_rate is 'Вычисляется базой: (likes+saved)/reach. NULL при reach=0';
 
 create index if not exists reels_type_idx         on public.reels (type);
 create index if not exists reels_created_at_idx   on public.reels (created_at desc);
 create index if not exists reels_published_at_idx on public.reels (published_at desc nulls last);
+
+-- -----------------------------------------------------------------------------
+--  2b. Миграция Спринта 2 для уже созданной таблицы
+--
+--  create table if not exists выше не трогает существующую таблицу, поэтому
+--  для базы, поднятой на Спринте 1, изменения нужно применить явно.
+--  На чистой базе этот блок — no-op.
+-- -----------------------------------------------------------------------------
+
+alter table public.reels add column if not exists instagram_id text;
+alter table public.reels add column if not exists synced_at timestamptz;
+
+-- Пересобираем engagement_rate, если он остался со старой формулой.
+-- Данные не теряются: колонка вычисляемая, Postgres пересчитает её сам.
+do $$
+begin
+  if exists (
+    select 1 from pg_attrdef d
+    join pg_attribute a on a.attrelid = d.adrelid and a.attnum = d.adnum
+    where d.adrelid = 'public.reels'::regclass
+      and a.attname = 'engagement_rate'
+      and pg_get_expr(d.adbin, d.adrelid) like '%comments%'
+  ) then
+    alter table public.reels drop column engagement_rate;
+    alter table public.reels add column engagement_rate numeric
+      generated always as (
+        case when reach > 0
+             then round((likes + saved)::numeric / reach, 4)
+        end
+      ) stored;
+    raise notice 'engagement_rate пересобран по формуле (likes+saved)/reach';
+  end if;
+end
+$$;
+
+comment on column public.reels.instagram_id is 'ID медиа в Instagram Graph API. Понадобится для скачивания видео в Спринте 3';
+comment on column public.reels.synced_at   is 'Когда метрики последний раз обновлялись из Graph API. NULL — заведено вручную';
+
+-- Уникальности на instagram_id намеренно нет: upsert идёт по url (он есть и у
+-- записей, заведённых руками), а второй уникальный ключ создал бы конфликт
+-- между ручной строкой без instagram_id и той же ссылкой из синхронизации.
+create index if not exists reels_instagram_id_idx on public.reels (instagram_id);
+create index if not exists reels_synced_at_idx    on public.reels (synced_at desc nulls last);
 
 -- -----------------------------------------------------------------------------
 --  3. tags — справочник атрибутов

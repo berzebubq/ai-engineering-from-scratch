@@ -34,6 +34,10 @@ export interface Database {
           published_at: string | null;
           created_at: string;
           updated_at: string;
+          /** ID медиа в Graph API. NULL у записей, заведённых вручную. */
+          instagram_id: string | null;
+          /** Когда метрики обновлялись из Graph API. NULL — не синхронизировалось. */
+          synced_at: string | null;
         };
         Insert: {
           id?: string;
@@ -50,6 +54,8 @@ export interface Database {
           published_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          instagram_id?: string | null;
+          synced_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["reels"]["Insert"]>;
         Relationships: [];

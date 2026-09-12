@@ -14,3 +14,20 @@ export type ActionState = {
 };
 
 export const initialActionState: ActionState = { status: "idle" };
+
+/** Результат синхронизации с Instagram. */
+export type SyncState = {
+  status: "idle" | "success" | "partial" | "error";
+  message?: string;
+  /** Сколько видео добавлено и сколько обновлено. */
+  created?: number;
+  updated?: number;
+  /**
+   * Видео, по которым не удалось получить метрики. Синхронизация при этом не
+   * прерывается: лучше обновить девять из десяти, чем ни одного.
+   */
+  failed?: Array<{ url: string; reason: string }>;
+  finishedAt?: string;
+};
+
+export const initialSyncState: SyncState = { status: "idle" };
