@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "node --env-file=.env.local scripts/db-push.mjs",
+    "db:check": "node --env-file=.env.local scripts/db-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

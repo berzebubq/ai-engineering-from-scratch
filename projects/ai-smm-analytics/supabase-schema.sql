@@ -155,6 +155,24 @@ create trigger reels_set_updated_at
   execute function public.set_updated_at();
 
 -- =============================================================================
+--  5b. Права на таблицы (GRANT)
+--
+--  RLS решает, какие СТРОКИ видит роль. GRANT решает, пустят ли её к таблице
+--  вообще. Без гранта самая правильная RLS-политика даёт "permission denied
+--  for table reels".
+--
+--  Supabase обычно выдаёт эти права сама через default privileges, так что
+--  блок чаще всего избыточен. Пишем явно: повторный GRANT ничего не ломает,
+--  а вот молчаливая зависимость от настроек проекта — ломает.
+-- =============================================================================
+
+grant usage on schema public to anon, authenticated;
+
+grant select, insert, update, delete
+  on public.reels, public.tags, public.reel_tags
+  to anon, authenticated;
+
+-- =============================================================================
 --  6. ROW LEVEL SECURITY
 --
 --  RLS включён на всех таблицах. Без единой политики это означает "запрещено

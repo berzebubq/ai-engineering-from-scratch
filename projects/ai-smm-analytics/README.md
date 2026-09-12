@@ -21,14 +21,24 @@
 
 ```bash
 npm install
+cp .env.example .env.local   # заполнить значениями из Supabase Dashboard
 
-cp .env.example .env.local   # и заполнить двумя значениями из Supabase
+npm run db:push              # применить схему к базе
+npm run db:check             # убедиться, что всё на месте
 npm run dev                  # http://localhost:3000
 ```
 
-Перед первым запуском нужно применить схему: Supabase Dashboard → SQL Editor →
-вставить `supabase-schema.sql` целиком → Run. Скрипт идемпотентный, повторный
-прогон ничего не ломает.
+`db:push` применяет `supabase-schema.sql` через psql. Если psql не установлен —
+то же самое руками: Supabase Dashboard → SQL Editor → New query → вставить файл
+целиком → Run. Скрипт идемпотентный, повторный прогон ничего не ломает.
+
+`db:check` ходит в базу тем же anon-ключом, что и приложение, и проверяет
+таблицы, стартовые теги, запись и generated-колонку. То есть проверяет ровно
+тот путь, по которому пойдёт дашборд.
+
+**Если `db:push` не может подключиться:** прямое подключение
+`db.<ref>.supabase.co` у Supabase работает только по IPv6. Если у провайдера
+его нет, возьмите строку Session pooler в Dashboard → Connect — она по IPv4.
 
 ## Структура
 
@@ -48,7 +58,8 @@ lib/
   supabase/             клиенты: client.ts (браузер), server.ts (сервер)
   validations/          схемы Zod, общие для формы и экшена
 types/database.ts       типы схемы Supabase
-supabase-schema.sql     DDL + RLS + стартовые теги
+supabase-schema.sql     DDL + GRANT + RLS + стартовые теги
+scripts/                db:push и db:check
 ```
 
 Две вещи, которые стоит знать про эту раскладку:
